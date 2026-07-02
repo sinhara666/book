@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIN STUDIO — Bookings Dashboard</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Archivo+Black&display=swap');
+
+  :root{
+    --paper: #e8e4d8;
+    --ink: #1c1a15;
+    --ink-soft: #4a4638;
+    --stamp: #b5402e;
+    --stamp-green: #35563f;
+    --stamp-amber: #a8791c;
+    --line: #a39d87;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Space Mono', monospace;
+    padding: 20px 14px 60px;
+    min-height: 100vh;
+  }
+  .wrap{ max-width: 640px; margin: 0 auto; }
+
+  h1{
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 24px;
+    margin-bottom: 4px;
+  }
+  .sub{ font-size: 12px; color: var(--ink-soft); margin-bottom: 20px; }
+
+  .stats{
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .stat{
+    border: 1px solid var(--ink);
+    padding: 10px 14px;
+    background: rgba(255,255,255,0.3);
+    flex: 1;
+    min-width: 90px;
+  }
+  .stat b{ display:block; font-size: 20px; }
+  .stat span{ font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); }
+
+  .filters{
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .filters button{
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    padding: 6px 12px;
+    border: 1px solid var(--ink);
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+    letter-spacing: 0.04em;
+  }
+  .filters button.active{
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .card{
+    border: 1px solid var(--ink);
+    background: rgba(255,255,255,0.35);
+    margin-bottom: 12px;
+    padding: 14px 16px;
+    position: relative;
+  }
+  .card-top{
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .card-name{ font-weight: 700; font-size: 15px; }
+  .card-business{ font-size: 12px; color: var(--ink-soft); margin-top: 2px; }
+  .card-when{
+    font-size: 11px;
+    text-align: right;
+    color: var(--ink-soft);
+    white-space: nowrap;
+  }
+  .card-when b{ display:block; color: var(--ink); font-size: 13px; }
+
+  .card-row{
+    display: flex;
+    gap: 10px;
+    font-size: 12px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+  }
+  .card-row a{ color: var(--stamp-green); text-decoration:none; font-weight:700; }
+  .card-notes{
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--line);
+  }
+
+  .card-bottom{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    gap: 10px;
+  }
+  select.status-select{
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    padding: 5px 8px;
+    border: 1px solid var(--ink);
+    background: rgba(255,255,255,0.6);
+    color: var(--ink);
+  }
+  .badge{
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    padding: 3px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+  .badge.new{ background: #d9e6dc; color: var(--stamp-green); }
+  .badge.contacted{ background: #f0e2c2; color: var(--stamp-amber); }
+  .badge.confirmed{ background: #cfe3d4; color: var(--stamp-green); }
+  .badge.cancelled{ background: #f0d4cf; color: var(--stamp); }
+
+  .empty, .loading{
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--ink-soft);
+    font-size: 13px;
+  }
+  .refresh-btn{
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 12px;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    padding: 10px 16px;
+    cursor: pointer;
+    margin-bottom: 16px;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <h1>Bookings Dashboard</h1>
+  <div class="sub">SIN STUDIO — live from your booking page</div>
+
+  <div class="stats" id="stats"></div>
+
+  <button class="refresh-btn" onclick="loadBookings()">↻ Refresh</button>
+
+  <div class="filters" id="filters"></div>
+
+  <div id="cardList">
+    <div class="loading">Loading bookings...</div>
+  </div>
+</div>
+
+<script>
+  // PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL HERE — same one used on the booking page
+  const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbx1BYYgCYaZc6NNVEszHETdLldm6NgyvzQathEO8CEUMvoJqoTzfZDSNti8f_1J6hrGCw/exec";
+
+  const STATUSES = ["New", "Contacted", "Confirmed", "Cancelled"];
+  let allBookings = [];
+  let currentFilter = "All";
+
+  function loadBookings(){
+    document.getElementById('cardList').innerHTML = '<div class="loading">Loading bookings...</div>';
+
+    if (WEBHOOK_URL === "YOUR_SCRIPT_URL_HERE") {
+      document.getElementById('cardList').innerHTML = '<div class="empty">Paste your webhook URL into this file first.</div>';
+      return;
+    }
+
+    fetch(WEBHOOK_URL + '?action=list')
+      .then(res => res.json())
+      .then(result => {
+        allBookings = result.status === 'success' ? result.bookings : [];
+        renderStats();
+        renderFilters();
+        renderCards();
+      })
+      .catch(() => {
+        document.getElementById('cardList').innerHTML = '<div class="empty">Couldn\'t load bookings — check your connection and refresh.</div>';
+      });
+  }
+
+  function renderStats(){
+    const total = allBookings.length;
+    const newCount = allBookings.filter(b => (b.status || 'New') === 'New').length;
+    const confirmed = allBookings.filter(b => b.status === 'Confirmed').length;
+
+    document.getElementById('stats').innerHTML = `
+      <div class="stat"><b>${total}</b><span>Total</span></div>
+      <div class="stat"><b>${newCount}</b><span>New</span></div>
+      <div class="stat"><b>${confirmed}</b><span>Confirmed</span></div>
+    `;
+  }
+
+  function renderFilters(){
+    const cats = ["All", ...STATUSES];
+    const div = document.getElementById('filters');
+    div.innerHTML = '';
+    cats.forEach(c => {
+      const btn = document.createElement('button');
+      btn.textContent = c;
+      if (c === currentFilter) btn.classList.add('active');
+      btn.onclick = () => { currentFilter = c; renderFilters(); renderCards(); };
+      div.appendChild(btn);
+    });
+  }
+
+  function renderCards(){
+    const list = document.getElementById('cardList');
+    let bookings = allBookings;
+    if (currentFilter !== "All") {
+      bookings = bookings.filter(b => (b.status || 'New') === currentFilter);
+    }
+
+    if (bookings.length === 0){
+      list.innerHTML = '<div class="empty">No bookings here yet.</div>';
+      return;
+    }
+
+    list.innerHTML = '';
+    bookings.forEach(b => {
+      const status = b.status || 'New';
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="card-top">
+          <div>
+            <div class="card-name">${b.name || 'Unknown'}</div>
+            <div class="card-business">${b.business || ''}</div>
+          </div>
+          <div class="card-when"><b>${b.date}</b>${b.time}</div>
+        </div>
+        <div class="card-row">
+          <a href="tel:${(b.phone||'').replace(/[^0-9+]/g,'')}">📞 ${b.phone || 'no phone'}</a>
+          ${b.email ? `<span>${b.email}</span>` : ''}
+        </div>
+        ${b.notes ? `<div class="card-notes">${b.notes}</div>` : ''}
+        <div class="card-bottom">
+          <span class="badge ${status.toLowerCase()}">${status}</span>
+          <select class="status-select" data-id="${b.id}">
+            ${STATUSES.map(s => `<option ${s===status?'selected':''}>${s}</option>`).join('')}
+          </select>
+        </div>
+      `;
+      card.querySelector('.status-select').addEventListener('change', function(){
+        updateStatus(b.id, this.value);
+      });
+      list.appendChild(card);
+    });
+  }
+
+  function updateStatus(id, newStatus){
+    fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'updateStatus', id: id, status: newStatus })
+    })
+    .then(res => res.json())
+    .then(result => {
+      if (result.status === 'success') {
+        const b = allBookings.find(x => x.id === id);
+        if (b) b.status = newStatus;
+        renderStats();
+        renderCards();
+      }
+    });
+  }
+
+  loadBookings();
+</script>
+
+</body>
+</html>

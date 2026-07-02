@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIN STUDIO — Book a Slot</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Archivo+Black&display=swap');
+
+  :root{
+    --paper: #e8e4d8;
+    --paper-dark: #dbd6c6;
+    --ink: #1c1a15;
+    --ink-soft: #4a4638;
+    --stamp: #b5402e;
+    --stamp-green: #35563f;
+    --line: #a39d87;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background: var(--paper);
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(28,26,21,0.03) 40px),
+      radial-gradient(circle at 20% 30%, rgba(0,0,0,0.02) 0%, transparent 50%),
+      radial-gradient(circle at 80% 70%, rgba(0,0,0,0.025) 0%, transparent 50%);
+    color: var(--ink);
+    font-family: 'Space Mono', monospace;
+    padding: 24px 16px 60px;
+    min-height: 100vh;
+  }
+
+  .ticket{
+    max-width: 640px;
+    margin: 0 auto;
+    background: var(--paper);
+    border: 2px solid var(--ink);
+    position: relative;
+  }
+  .ticket::before{
+    content: "";
+    position: absolute;
+    inset: 8px;
+    border: 1px dashed var(--line);
+    pointer-events: none;
+  }
+
+  .head{
+    padding: 28px 28px 20px;
+    border-bottom: 2px solid var(--ink);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .head-left{ flex: 1; }
+  .eyebrow{
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  h1{
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 30px;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+  }
+  .ticket-no{
+    text-align: right;
+    font-size: 11px;
+    color: var(--ink-soft);
+    white-space: nowrap;
+  }
+  .ticket-no b{
+    display:block;
+    font-size: 15px;
+    color: var(--ink);
+    font-family: 'Space Mono', monospace;
+  }
+
+  .stamp{
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    transform: rotate(8deg);
+    border: 3px solid var(--stamp);
+    color: var(--stamp);
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    padding: 6px 12px;
+    border-radius: 4px;
+    opacity: 0.85;
+  }
+
+  .body-block{
+    padding: 24px 28px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .body-block:last-of-type{ border-bottom: none; }
+
+  .label{
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .label::after{
+    content:"";
+    flex:1;
+    height:1px;
+    background: var(--line);
+  }
+
+  .pitch{
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--ink);
+    max-width: 52ch;
+  }
+  .pitch strong{ background: linear-gradient(transparent 60%, rgba(181,64,46,0.18) 60%); }
+
+  .specs{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 18px;
+  }
+  .spec{
+    border: 1px solid var(--ink);
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.25);
+  }
+  .spec .k{ font-size: 10px; letter-spacing: 0.08em; color: var(--ink-soft); text-transform: uppercase; }
+  .spec .v{ font-size: 14px; font-weight: 700; margin-top: 3px; }
+
+  form{ display: flex; flex-direction: column; gap: 14px; }
+  .field{
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .field label{
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .field input, .field select, .field textarea{
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.4);
+    border: 1px solid var(--ink);
+    color: var(--ink);
+    outline: none;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{
+    background: rgba(255,255,255,0.7);
+    box-shadow: 0 0 0 2px var(--stamp-green);
+  }
+  .row2{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 480px){
+    .row2, .specs{ grid-template-columns: 1fr; }
+    h1{ font-size: 24px; }
+    .stamp{ position: static; transform: rotate(-2deg); display:inline-block; margin-top: 10px; }
+    .head{ flex-direction: column; }
+  }
+
+  .submit-btn{
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 15px;
+    letter-spacing: 0.03em;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    padding: 16px;
+    cursor: pointer;
+    margin-top: 4px;
+    transition: background 0.15s ease;
+  }
+  .submit-btn:hover{ background: var(--stamp-green); }
+  .submit-btn:disabled{ opacity: 0.5; cursor: default; }
+
+  .perf{
+    height: 20px;
+    background:
+      radial-gradient(circle, var(--paper) 6px, transparent 7px) 0 -10px / 24px 20px repeat-x,
+      var(--ink);
+    position: relative;
+  }
+
+  .foot{
+    padding: 18px 28px 26px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: var(--ink-soft);
+    letter-spacing: 0.05em;
+  }
+
+  .confirm{
+    display:none;
+    padding: 40px 28px;
+    text-align:center;
+  }
+  .confirm.show{ display:block; }
+  .confirm .check{
+    width: 48px; height:48px;
+    border: 3px solid var(--stamp-green);
+    border-radius: 50%;
+    display:flex; align-items:center; justify-content:center;
+    margin: 0 auto 16px;
+    color: var(--stamp-green);
+    font-size: 22px;
+  }
+  .confirm h2{
+    font-family:'Archivo Black', sans-serif;
+    font-size: 20px;
+    margin-bottom: 8px;
+  }
+  .confirm p{ font-size: 13px; color: var(--ink-soft); line-height:1.6; }
+  .error-msg{
+    font-size: 12px;
+    color: var(--stamp);
+    display: none;
+  }
+  .error-msg.show{ display: block; }
+
+  /* Chat bot widget */
+  .chat-bubble{
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--paper);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    z-index: 999;
+    border: 2px solid var(--paper);
+  }
+  .chat-window{
+    position: fixed;
+    bottom: 86px;
+    right: 20px;
+    width: min(320px, calc(100vw - 40px));
+    max-height: 420px;
+    background: var(--paper);
+    border: 2px solid var(--ink);
+    display: none;
+    flex-direction: column;
+    z-index: 999;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  }
+  .chat-window.open{ display: flex; }
+  .chat-header{
+    background: var(--ink);
+    color: var(--paper);
+    padding: 10px 14px;
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 13px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .chat-header span.close{ cursor: pointer; font-family: 'Space Mono', monospace; }
+  .chat-body{
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 280px;
+  }
+  .chat-msg{
+    font-size: 12.5px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    max-width: 85%;
+    line-height: 1.4;
+  }
+  .chat-msg.bot{
+    background: rgba(255,255,255,0.6);
+    border: 1px solid var(--line);
+    align-self: flex-start;
+  }
+  .chat-msg.user{
+    background: var(--stamp-green);
+    color: var(--paper);
+    align-self: flex-end;
+  }
+  .chat-quick{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 0 12px 10px;
+  }
+  .chat-quick button{
+    font-family: 'Space Mono', monospace;
+    font-size: 10.5px;
+    padding: 5px 9px;
+    border: 1px solid var(--ink);
+    background: transparent;
+    cursor: pointer;
+  }
+  .chat-input-row{
+    display: flex;
+    border-top: 1px solid var(--ink);
+  }
+  .chat-input-row input{
+    flex: 1;
+    border: none;
+    background: rgba(255,255,255,0.5);
+    padding: 10px 12px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12.5px;
+    outline: none;
+  }
+  .chat-input-row button{
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    padding: 0 16px;
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  .slot-picker{
+    max-height: 260px;
+    overflow-y: auto;
+    border: 1px solid var(--ink);
+    background: rgba(255,255,255,0.3);
+  }
+  .slot-day{
+    padding: 8px 12px 4px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    background: rgba(0,0,0,0.04);
+    border-top: 1px solid var(--line);
+  }
+  .slot-day:first-child{ border-top: none; }
+  .slot-row{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 6px 12px 10px;
+  }
+  .slot-btn{
+    font-family: 'Space Mono', monospace;
+    font-size: 12.5px;
+    padding: 7px 10px;
+    border: 1px solid var(--ink);
+    background: rgba(255,255,255,0.5);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .slot-btn:hover{ background: rgba(53,86,63,0.1); }
+  .slot-btn.selected{
+    background: var(--stamp-green);
+    color: var(--paper);
+    border-color: var(--stamp-green);
+  }
+  .slot-loading, .slot-empty{
+    padding: 20px 12px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+</style>
+</head>
+<body>
+
+<div class="ticket" id="ticketView">
+  <div class="head">
+    <div class="head-left">
+      <div class="eyebrow">Sin Studio · Work Order</div>
+      <h1>Book Your<br>Slot</h1>
+    </div>
+    <div class="ticket-no">
+      NO.
+      <b id="ticketNum">----</b>
+    </div>
+  </div>
+  <div class="stamp">NO MONTHLY FEE</div>
+
+  <div class="body-block">
+    <div class="label">The Job</div>
+    <p class="pitch">
+      <strong>Stop losing customers to voicemail.</strong> I build a booking system for your business — customers schedule appointments online, you stop playing phone tag. One-time build. No subscriptions, no recurring bill, it just runs.
+    </p>
+    <div class="specs">
+      <div class="spec"><div class="k">Setup Cost</div><div class="v">One-time</div></div>
+      <div class="spec"><div class="k">Monthly Fee</div><div class="v">$0 — Ever</div></div>
+      <div class="spec"><div class="k">Delivery</div><div class="v">Live in days</div></div>
+      <div class="spec"><div class="k">Ownership</div><div class="v">Yours, forever</div></div>
+    </div>
+  </div>
+
+  <div class="body-block">
+    <div class="label">Schedule a Call</div>
+    <form id="bookingForm">
+      <div class="row2">
+        <div class="field">
+          <label for="name">Name</label>
+          <input type="text" id="name" required placeholder="Your name">
+        </div>
+        <div class="field">
+          <label for="business">Business</label>
+          <input type="text" id="business" required placeholder="Business name">
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="phone">Phone</label>
+          <input type="tel" id="phone" required placeholder="(___) ___-____">
+        </div>
+        <div class="field">
+          <label for="email">Email (optional)</label>
+          <input type="email" id="email" placeholder="you@business.com">
+        </div>
+      </div>
+      <div class="field">
+        <label>Pick an Open Slot</label>
+        <div id="slotPicker" class="slot-picker">
+          <div class="slot-loading">Checking open slots...</div>
+        </div>
+        <input type="hidden" id="date" required>
+        <input type="hidden" id="time" required>
+      </div>
+      <div class="field">
+        <label for="notes">What's your business type / what do you need?</label>
+        <textarea id="notes" rows="3" placeholder="e.g. roofing company, no website, missing calls a lot..."></textarea>
+      </div>
+      <div class="error-msg" id="errorMsg">Something didn't go through — try again or text Tia directly.</div>
+      <button type="submit" class="submit-btn" id="submitBtn">Punch The Ticket →</button>
+    </form>
+  </div>
+
+  <div class="confirm" id="confirmView">
+    <div class="check">✓</div>
+    <h2>Ticket Punched</h2>
+    <p id="confirmText">You're booked. Confirmation is headed your way — talk soon.</p>
+  </div>
+
+  <div class="perf"></div>
+  <div class="foot">
+    <span>SIN STUDIO</span>
+    <span id="footDate">--/--/----</span>
+  </div>
+</div>
+
+<div class="chat-bubble" id="chatBubble" onclick="toggleChat()">💬</div>
+
+<div class="chat-window" id="chatWindow">
+  <div class="chat-header">
+    <span>SIN STUDIO — Ask a Question</span>
+    <span class="close" onclick="toggleChat()">✕</span>
+  </div>
+  <div class="chat-body" id="chatBody">
+    <div class="chat-msg bot">Hey! I'm here to answer quick questions about the booking system. Ask me anything, or tap a question below.</div>
+  </div>
+  <div class="chat-quick" id="chatQuick"></div>
+  <div class="chat-input-row">
+    <input type="text" id="chatInput" placeholder="Type a question...">
+    <button onclick="sendChatMessage()">Send</button>
+  </div>
+</div>
+
+<script>
+  document.getElementById('ticketNum').textContent = String(Math.floor(1000 + Math.random()*9000));
+  document.getElementById('footDate').textContent = new Date().toLocaleDateString('en-US');
+
+  // PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL HERE (see booking-webhook.gs setup instructions)
+  const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbx1BYYgCYaZc6NNVEszHETdLldm6NgyvzQathEO8CEUMvoJqoTzfZDSNti8f_1J6hrGCw/exec";
+
+  const slotPicker = document.getElementById('slotPicker');
+  const dateField = document.getElementById('date');
+  const timeField = document.getElementById('time');
+
+  function renderSlots(slots){
+    slotPicker.innerHTML = '';
+
+    if (!slots || slots.length === 0){
+      slotPicker.innerHTML = '<div class="slot-empty">No open slots in the next 30 days — text Tia directly.</div>';
+      return;
+    }
+
+    // Group by date, keep day order as returned
+    const grouped = {};
+    const order = [];
+    slots.forEach(s => {
+      if (!grouped[s.date]) { grouped[s.date] = { label: s.label, times: [] }; order.push(s.date); }
+      grouped[s.date].times.push(s.time);
+    });
+
+    order.forEach(dateKey => {
+      const dayDiv = document.createElement('div');
+      dayDiv.className = 'slot-day';
+      dayDiv.textContent = grouped[dateKey].label;
+      slotPicker.appendChild(dayDiv);
+
+      const rowDiv = document.createElement('div');
+      rowDiv.className = 'slot-row';
+      grouped[dateKey].times.forEach(t => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'slot-btn';
+        btn.textContent = t;
+        btn.dataset.date = dateKey;
+        btn.dataset.time = t;
+        btn.addEventListener('click', function(){
+          document.querySelectorAll('.slot-btn.selected').forEach(b => b.classList.remove('selected'));
+          this.classList.add('selected');
+          dateField.value = dateKey;
+          timeField.value = t;
+        });
+        rowDiv.appendChild(btn);
+      });
+      slotPicker.appendChild(rowDiv);
+    });
+  }
+
+  function loadSlots(){
+    slotPicker.innerHTML = '<div class="slot-loading">Checking open slots...</div>';
+    if (WEBHOOK_URL === "YOUR_SCRIPT_URL_HERE") {
+      slotPicker.innerHTML = '<div class="slot-empty">Booking system isn\'t connected yet.</div>';
+      return;
+    }
+    fetch(WEBHOOK_URL)
+      .then(res => res.json())
+      .then(result => {
+        renderSlots(result.status === 'success' ? result.slots : []);
+      })
+      .catch(() => {
+        slotPicker.innerHTML = '<div class="slot-empty">Couldn\'t load open slots — refresh to try again.</div>';
+      });
+  }
+
+  loadSlots();
+
+  document.getElementById('bookingForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    const err = document.getElementById('errorMsg');
+    err.classList.remove('show');
+
+    if (!dateField.value || !timeField.value){
+      err.textContent = "Pick an open slot above first.";
+      err.classList.add('show');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Punching...';
+
+    const data = {
+      name: document.getElementById('name').value,
+      business: document.getElementById('business').value,
+      phone: document.getElementById('phone').value,
+      email: document.getElementById('email').value,
+      date: dateField.value,
+      time: timeField.value,
+      notes: document.getElementById('notes').value
+    };
+
+    function showConfirm(){
+      document.querySelectorAll('.body-block').forEach(el => el.style.display = 'none');
+      const confirm = document.getElementById('confirmView');
+      confirm.classList.add('show');
+      document.getElementById('confirmText').textContent =
+        `You're on the books for ${data.date} at ${data.time}. Tia will confirm shortly at ${data.phone}.`;
+    }
+
+    if (WEBHOOK_URL === "YOUR_SCRIPT_URL_HERE") {
+      btn.disabled = false;
+      btn.textContent = 'Punch The Ticket →';
+      err.textContent = "Booking system isn't connected yet — paste your Apps Script URL into the code.";
+      err.classList.add('show');
+      return;
+    }
+
+    fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(result => {
+      if (result.status === 'success') {
+        showConfirm();
+      } else {
+        btn.disabled = false;
+        btn.textContent = 'Punch The Ticket →';
+        err.textContent = "That slot just got taken — pick another from the refreshed list below.";
+        err.classList.add('show');
+        dateField.value = '';
+        timeField.value = '';
+        loadSlots(); // refresh the whole list so nothing stale is shown
+      }
+    })
+    .catch(() => {
+      btn.disabled = false;
+      btn.textContent = 'Punch The Ticket →';
+      err.textContent = "Something didn't go through — try again or text Tia directly.";
+      err.classList.add('show');
+    });
+  });
+
+  // ===== Keyword Bot (no AI, no API cost — pure keyword matching) =====
+  const CHAT_RULES = [
+    { keywords: ["price", "cost", "how much", "pricing", "expensive"], reply: "Pricing runs $1,500–$3,500 as a one-time build depending on what you need — no monthly fees, ever. Want me to point you at the booking form to grab a call?" },
+    { keywords: ["monthly", "subscription", "recurring", "fee"], reply: "Nope — zero monthly fees. It's a one-time build, you own it forever." },
+    { keywords: ["what", "include", "get", "does it do"], reply: "You get a working website with an online booking system built in — customers book appointments directly, it syncs to your calendar, and you get notified instantly. No more phone tag." },
+    { keywords: ["how long", "timeline", "when", "ready"], reply: "Most builds are live within a few days once we lock in what you need." },
+    { keywords: ["discount", "deal", "offer"], reply: "Ask about the intro pricing when you book your call — happy to work something out for early clients." },
+    { keywords: ["book", "appointment", "schedule", "call", "talk"], reply: "You're in the right spot — scroll down and pick an open slot from the list, it'll book instantly." },
+    { keywords: ["contact", "phone", "text", "email", "reach"], reply: "Best way is to book a slot below — Tia will follow up directly once it's booked." },
+    { keywords: ["refund", "guarantee", "money back"], reply: "Happy to talk through guarantees on the call — every build is tailored, so let's discuss specifics then." },
+    { keywords: ["hi", "hello", "hey"], reply: "Hey! Ask me about pricing, what's included, or how booking works — or just scroll down to grab a slot." }
+  ];
+
+  const FALLBACK_REPLY = "Good question — that's best answered on a quick call. Scroll down and grab an open slot, and Tia can walk you through it.";
+
+  function matchReply(userText){
+    const lower = userText.toLowerCase();
+    for (const rule of CHAT_RULES){
+      if (rule.keywords.some(k => lower.includes(k))) return rule.reply;
+    }
+    return FALLBACK_REPLY;
+  }
+
+  function toggleChat(){
+    document.getElementById('chatWindow').classList.toggle('open');
+  }
+
+  function addChatMsg(text, sender){
+    const body = document.getElementById('chatBody');
+    const msg = document.createElement('div');
+    msg.className = 'chat-msg ' + sender;
+    msg.textContent = text;
+    body.appendChild(msg);
+    body.scrollTop = body.scrollHeight;
+  }
+
+  function sendChatMessage(){
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
+    if (!text) return;
+    addChatMsg(text, 'user');
+    input.value = '';
+    setTimeout(() => addChatMsg(matchReply(text), 'bot'), 300);
+  }
+
+  document.getElementById('chatInput').addEventListener('keypress', function(e){
+    if (e.key === 'Enter') sendChatMessage();
+  });
+
+  const quickQuestions = ["Pricing?", "What's included?", "Monthly fees?", "How do I book?"];
+  const quickDiv = document.getElementById('chatQuick');
+  quickQuestions.forEach(q => {
+    const btn = document.createElement('button');
+    btn.textContent = q;
+    btn.onclick = () => {
+      addChatMsg(q, 'user');
+      setTimeout(() => addChatMsg(matchReply(q), 'bot'), 300);
+    };
+    quickDiv.appendChild(btn);
+  });
+</script>
+
+</body>
+</html>
